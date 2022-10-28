@@ -1,37 +1,43 @@
-function debounce(fn, delay) {
-  let timer = null;
-  let beforeInput = "";
+function debounce(func, wait, immediate) {
+    var timeout;
 
-  return function () {
-    let context = this;
-    let args = arguments;
+    return function executedFunction() {
+        var context = this;
+        var args = arguments;
 
-    let input = document.getElementById("search");
+        var later = function () {
+            timeout = null;
+            if (!immediate) func.apply(context, args);
+        };
 
-    clearTimeout(timer);
-    timer = setTimeout(function () {
-      if (beforeInput !== input.value) {
-        fn.call(context, input.value);
-      } else {
-        console.log("keywords no change");
-      }
-      beforeInput = input.value;
-    }, delay);
-  };
+        var callNow = immediate && !timeout;
+
+        clearTimeout(timeout);
+
+        timeout = setTimeout(later, wait);
+
+        if (callNow) func.apply(context, args);
+    };
 }
 
+var data = [];
+var resultPanel = document.getElementById("result");
+var inputEle = document.getElementById("search");
+
 function fetchUsers() {
-  fetch("./data.json").then((res) => res.json());
+    fetch("./data.json").then((res) => {
+        return res.json();
+    }).then(res => {
+        data = res
+    });
 }
 
 fetchUsers();
 
-function search(keywords) {
-  let resultPanel = document.getElementById("result");
-  setTimeout(function () {
-    resultPanel.innerHTML = `The result of keywords: ${keywords}`;
-  }, 200);
+function search() {
+    let keywords = inputEle.value;
+    let resultArray = data.filter(ele => ele.name.toLowerCase().includes(keywords))
+    resultPanel.innerHTML = `The result for keywords:${inputEle.value}` + '<br>' + `${JSON.stringify(resultArray)}`;
 }
 
-let inputEle = document.getElementById("search");
 inputEle.addEventListener("input", debounce(search, 3000));
